@@ -1,0 +1,255 @@
+<!-- 
+    Connect to the raspberry pi using websockets.
+    Send the position of the two levers according to the user touch.
+
+    python -m SimpleHTTPServer 8000
+    python3 -m http.server
+ -->
+
+<!doctype html> 
+        <html>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <head>
+        <title>RCHummer Gamepad</title>
+        <style>
+
+        html, body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        overflow:hidden;
+        -webkit-overflow-scrolling: touch; 
+        }
+
+        #gamepad { 
+            /* display:block;  */
+            width: 100%;
+        }
+        @media only screen and (orientation:landscape){
+            #gamepad {
+                transform: rotate(0deg);
+                background-color:greenyellow;
+                height: 100vh; /* https://www.quirksmode.org/css/units-values/viewport.html*/
+                position: absolute;
+                top:0;
+            }
+            #left_right {
+                width:50vw;
+                height:95vh;
+            }
+            #forward_backward {
+                width:50vw;
+                height:95vh;
+            }
+            #portrait_msg{
+                display: none;
+            }
+        }
+        @media only screen and (orientation:portrait){
+            #gamepad{
+                display: none;
+            }
+            #portrait_msg{
+                position:absolute;
+                top:50%; 
+                height:50%; 
+                width:100%;
+                text-align:center;
+            }            /*
+            I need to test what happens if you change from landscape to portrait while using the gamepad.
+            I could use if(window.innerHeight > window.innerWidth){
+
+            */
+
+            /* #gamepad {  
+                transform: rotate(90deg);
+                transform-origin: left top;
+                width: 100vh;
+                overflow-x: hidden;
+                position: absolute;
+                top: 0;
+                left: 100%;
+                background-color:greenyellow;
+            }
+            #left_right {
+                width:50vh;
+                height:95vw;
+            }
+            #forward_backward {
+                width:50vh;
+                height:95vw;
+            } */
+        }
+
+        #left_right {
+            float: left;
+            background-color:gainsboro;
+        }
+        #forward_backward {
+            float: left;
+            background-color:gainsboro;
+        }
+
+        #server_status{
+            text-align:center;
+        }
+
+        button {
+            display: block;
+            padding: 16px;
+            margin: 0 auto 16px auto;
+            box-sizing: border-box;
+            border-style: none;
+            border-radius: 6px;
+            text-align:center;
+            text-decoration: none;
+            user-select: none;
+        }
+
+        .btn {
+            background-color:dodgerblue;
+            background-image: none;
+        }
+
+        #btn_LR{
+            position: relative;
+            width: 30%;
+            height: 10%;
+            top: 40%;
+            left: 0%;
+        }    
+
+        #btn_FB{
+            position: relative;
+            width: 10%;
+            height: 30%;
+            top: 30%;
+            left: 0%;
+        }    
+
+        </style>
+
+        <script>
+        // var ws = new WebSocket("ws://"+window.location.hostname+":8080/ws");
+
+        // ws.onopen = function(evt) {
+        //     document.getElementById('server_status').innerHTML = "Ok. You are in!";
+        // }
+
+        // /*ws.onmessage = function(evt) {
+        //     alert("evt.data:"+evt.data);
+        // }*/
+
+        // ws.onclose = function(evt) {
+        //     document.getElementById('server_status').innerHTML = "o.O Not working...";
+        // }
+
+
+        // function send_cmd(cmd){
+        //     ws.send(cmd);   
+        // }
+        </script>
+
+        <script>
+
+        var MAX_SAMPLE_RATE = 1; //in Hertz
+        
+        var btn_init_pos = { btn_LR: null, btn_FB: null };   
+        
+        var btn_timeout = { btn_LR: true, btn_FB: true };
+
+
+        function send_cmd(btn_id, cmd){
+            if(btn_timeout[btn_id]){
+                btn_timeout[btn_id] = false;
+                setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id);
+                console.log('send_cmd - '+ btn_id + ' :' + cmd);
+            }
+        }
+
+        function set_btn_timeout(btn_id){
+            btn_timeout[btn_id] = true;
+        }
+
+        function touchstart_btn(evt){
+            if(evt.target.id=='btn_FB'){
+                btn_init_pos[evt.targetTouches[0].target.id] = evt.targetTouches[0].clientY
+            }else{
+                btn_init_pos[evt.targetTouches[0].target.id] = evt.targetTouches[0].clientX
+            }
+            // console.log('Start:'+evt.target.id + ' - ' + btn_init_pos)
+        }
+
+        function touchmove_btn(evt){
+            if(evt.target.id=='btn_FB'){
+                var half_Y = evt.targetTouches[0].screenY/2;
+                var diff = evt.targetTouches[0].clientY-btn_init_pos[evt.targetTouches[0].target.id];
+                if(diff>100){
+                    diff=100;
+                } else if(diff<-100){
+                    diff=-100;
+                }
+                evt.targetTouches[0].target.style.transform = 'translateY('+diff+'px)';
+            }else{
+                var half_Y = evt.targetTouches[0].screenX/2;
+                var diff = evt.targetTouches[0].clientX-btn_init_pos[evt.targetTouches[0].target.id];
+                if(diff>100){
+                    diff=100;
+                } else if(diff<-100){
+                    diff=-100;
+                }
+                evt.targetTouches[0].target.style.transform = 'translateX('+diff+'px)';
+            }
+            send_cmd(evt.target.id, diff)
+            // console.log('Move:'+evt.target.id + ' - diff='+diff);
+        }
+
+        function touchend_btn(evt){
+            if(evt.target.id=='btn_FB'){
+                evt.target.style.transform = 'translateY(0px)';
+            }else{
+                evt.target.style.transform = 'translateX(0px)';
+            }            
+            // console.log('End:'+evt.target.id);
+        }
+
+        window.onload = function (){
+        
+            // to avoid moving the screen during touch on iOS
+            // https://stackoverflow.com/a/49582193
+            document.addEventListener('touchmove', function(evt) {
+                evt.preventDefault();
+            }, { passive: false });
+
+
+            var LR_btn = document.getElementById('btn_LR');
+            var FB_btn = document.getElementById('btn_FB');
+
+            LR_btn.addEventListener('touchstart',touchstart_btn);
+            LR_btn.addEventListener('touchmove',touchmove_btn);
+            LR_btn.addEventListener('touchend',touchend_btn);
+
+            FB_btn.addEventListener('touchstart',touchstart_btn);
+            FB_btn.addEventListener('touchmove',touchmove_btn);
+            FB_btn.addEventListener('touchend',touchend_btn);
+        }
+
+        </script>
+
+        </head>
+
+        <body>
+        <div id="portrait_msg">Please, use landscape mode!</div>
+        <div id="gamepad" style="text-align:center">
+            <div id="left_right">steering
+                        <button id="btn_LR" class="btn" tabindex="1"></button>
+            </div>
+            <div id="forward_backward">throttle
+                <button id="btn_FB" class="btn" tabindex="2"></button>
+            </div>
+            <p id="server_status">status...</p>
+        
+        </div>
+
+        </body>
+        </html>
