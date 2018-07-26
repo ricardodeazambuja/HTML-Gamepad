@@ -130,40 +130,35 @@
         </style>
 
         <script>
-        // var ws = new WebSocket("ws://"+window.location.hostname+":8080/ws");
 
-        // ws.onopen = function(evt) {
-        //     document.getElementById('server_status').innerHTML = "Ok. You are in!";
-        // }
-
-        // /*ws.onmessage = function(evt) {
-        //     alert("evt.data:"+evt.data);
-        // }*/
-
-        // ws.onclose = function(evt) {
-        //     document.getElementById('server_status').innerHTML = "o.O Not working...";
-        // }
-
-
-        // function send_cmd(cmd){
-        //     ws.send(cmd);   
-        // }
-        </script>
-
-        <script>
-
-        var MAX_SAMPLE_RATE = 1; //in Hertz
+        var MAX_SAMPLE_RATE = 20; //in Hertz
         
         var btn_init_pos = { btn_LR: null, btn_FB: null };   
         
         var btn_timeout = { btn_LR: true, btn_FB: true };
+
+        var ws = null;
 
 
         function send_cmd(btn_id, cmd){
             if(btn_timeout[btn_id]){
                 btn_timeout[btn_id] = false;
                 setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id);
-                console.log('send_cmd - '+ btn_id + ' :' + cmd);
+
+                var msg = {
+                            cmd:  cmd,
+                            id:   btn_id,
+                            date: Date.now()
+                            };
+
+                if (ws.readyState==ws.OPEN){
+                    console.log(ws)
+                    // Send the msg object as a JSON-formatted string.
+                    ws.send(JSON.stringify(msg));
+                }else{
+                    console.log(JSON.stringify(msg));
+                }
+                // console.log('send_cmd - '+ btn_id + ' :' + cmd);
             }
         }
 
@@ -232,6 +227,22 @@
             FB_btn.addEventListener('touchstart',touchstart_btn);
             FB_btn.addEventListener('touchmove',touchmove_btn);
             FB_btn.addEventListener('touchend',touchend_btn);
+
+            ws = new WebSocket("ws://"+window.location.hostname+":8080/ws");
+            if (ws){
+                ws.onopen = function(evt) {
+                    document.getElementById('server_status').innerHTML = "Ok. You are in!";
+                    send_cmd("init", null); //sends the initial timestamp
+                }
+
+                ws.onmessage = function(evt) {
+                    console.log(evt.data);
+                }
+
+                ws.onclose = function(evt) {
+                    document.getElementById('server_status').innerHTML = "Not connected...";
+                }
+            }
         }
 
         </script>
