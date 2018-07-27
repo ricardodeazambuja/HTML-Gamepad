@@ -139,11 +139,20 @@
 
         var ws = null;
 
+        var timeout_holder = null;
+
 
         function send_cmd(btn_id, cmd){
+            if(cmd==0){
+                if(timeout_holder){
+                    clearTimeout(timeout_holder)
+                }
+                btn_timeout[btn_id] = true;
+            }
+            
             if(btn_timeout[btn_id]){
                 btn_timeout[btn_id] = false;
-                setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id); //in ms
+                timeout_holder = setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id); //in ms
 
                 var msg = {
                             cmd:  cmd,
@@ -203,7 +212,8 @@
                 evt.target.style.transform = 'translateY(0px)';
             }else{
                 evt.target.style.transform = 'translateX(0px)';
-            }            
+            }
+            send_cmd(evt.target.id, 0)
             // console.log('End:'+evt.target.id);
         }
 
