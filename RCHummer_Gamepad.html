@@ -143,20 +143,19 @@
         function send_cmd(btn_id, cmd){
             if(btn_timeout[btn_id]){
                 btn_timeout[btn_id] = false;
-                setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id);
+                setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id); //in ms
 
                 var msg = {
                             cmd:  cmd,
                             id:   btn_id,
-                            date: Date.now()
+                            timestamp: Date.now()
                             };
 
                 if (ws.readyState==ws.OPEN){
-                    console.log(ws)
                     // Send the msg object as a JSON-formatted string.
                     ws.send(JSON.stringify(msg));
                 }else{
-                    console.log(JSON.stringify(msg));
+                    console.log('Connection is closed - ' + JSON.stringify(msg));
                 }
                 // console.log('send_cmd - '+ btn_id + ' :' + cmd);
             }
@@ -232,7 +231,6 @@
             if (ws){
                 ws.onopen = function(evt) {
                     document.getElementById('server_status').innerHTML = "Ok. You are in!";
-                    send_cmd("init", null); //sends the initial timestamp
                 }
 
                 ws.onmessage = function(evt) {
