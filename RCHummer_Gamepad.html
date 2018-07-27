@@ -114,14 +114,14 @@
         #btn_LR{
             position: relative;
             width: 30%;
-            height: 10%;
+            height: 20%;
             top: 40%;
             left: 0%;
         }    
 
         #btn_FB{
             position: relative;
-            width: 10%;
+            width: 20%;
             height: 30%;
             top: 30%;
             left: 0%;
@@ -131,7 +131,7 @@
 
         <script>
 
-        var MAX_SAMPLE_RATE = 20; //in Hertz
+        var MAX_SAMPLE_RATE = 50; //in Hertz
         
         var btn_init_pos = { btn_LR: null, btn_FB: null };   
         
@@ -149,7 +149,7 @@
                 }
                 btn_timeout[btn_id] = true;
             }
-            
+
             if(btn_timeout[btn_id]){
                 btn_timeout[btn_id] = false;
                 timeout_holder = setTimeout(set_btn_timeout, 1000/MAX_SAMPLE_RATE, btn_id); //in ms
