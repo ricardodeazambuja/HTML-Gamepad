@@ -12,7 +12,6 @@
         <head>
         <title>RCHummer Gamepad</title>
         <style>
-
         html, body {
         height: 100%;
         width: 100%;
@@ -249,6 +248,24 @@
 
                 ws.onclose = function(evt) {
                     document.getElementById('server_status').innerHTML = "Not connected...";
+                }
+
+                window.onblur = function(){
+                    if(ws){
+                        ws.close();
+                        document.getElementById('server_status').innerHTML = "Not connected...";
+                        location.reload()
+                    }
+                }
+
+                window.window.onorientationchange = function() { 
+                    if(ws){
+                        if(window.orientation==0 || window.orientation==180){
+                            ws.close();
+                            document.getElementById('server_status').innerHTML = "Not connected...";
+                            location.reload()
+                        }
+                    }
                 }
             }
         }
