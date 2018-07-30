@@ -26,6 +26,7 @@
         }
         @media only screen and (orientation:landscape){
             #gamepad {
+                text-align:center;
                 transform: rotate(0deg);
                 background-color:greenyellow;
                 height: 100vh; /* https://www.quirksmode.org/css/units-values/viewport.html*/
@@ -46,6 +47,7 @@
         }
         @media only screen and (orientation:portrait){
             #gamepad{
+                text-align:center;
                 display: none;
             }
             #portrait_msg{
@@ -108,6 +110,7 @@
         .btn {
             background-color:dodgerblue;
             background-image: none;
+            touch-action: manipulation;
         }
 
         #btn_LR{
@@ -218,9 +221,10 @@
 
         window.onload = function (){
         
-            // to avoid moving the screen during touch on iOS
+            // to avoid moving the screen during touch on iOS and
+            // to disable double touch zoom. 
             // https://stackoverflow.com/a/49582193
-            document.addEventListener('touchmove', function(evt) {
+            window.addEventListener('touchstart', function(evt) {
                 evt.preventDefault();
             }, { passive: false });
 
@@ -276,7 +280,7 @@
 
         <body>
         <div id="portrait_msg">Please, use landscape mode!</div>
-        <div id="gamepad" style="text-align:center">
+        <div id="gamepad">
             <div id="left_right">steering
                         <button id="btn_LR" class="btn" tabindex="1"></button>
             </div>
